@@ -4,35 +4,56 @@ const c = canvas.getContext('2d')
 canvas.width = 1024
 canvas.height = 576
 
-let gravity = 0.5
-
-class Player {
-    constructor(position) {
-        this.position = position
-        this.velocity = {
-            x: 0,
-            y: 1
-        }
-        this.height = 100
-        
-    }
-    draw() {
-        c.fillStyle = 'red'
-        c.fillRect(this.position.x, this.position.y, 100, this.height)
-    }
-
-    update() {
-        this.draw()
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-        if (this.position.y + this.height + this.velocity.y < canvas.height){  
-            this.velocity.y += gravity
-        }
-        else {
-            this.velocity.y = 0 //prevent player from falling past bottom of canvas
-        }
-    }
+const scaledCanvas = {
+    width: canvas.width / 4,
+    height: canvas.height / 4
 }
+
+const floorCollisions2D = []
+for (let i = 0; i < floorCollisions.length; i += 36){
+    floorCollisions2D.push(floorCollisions.slice(i, i + 36))
+}
+
+const platformCollisions2D = []
+for (let i = 0; i < platformCollisions.length; i +=36){
+    platformCollisions2D.push(platformCollisions.slice(i, i + 36))
+}
+
+const collisionBlocks = []
+floorCollisions2D.forEach((row, y)=> {
+    row.forEach((symbol, x) => {
+        if(symbol === 202){
+            console.log('draw block')
+            collisionBlocks.push(
+                new CollisionBlock({
+                position: {
+                    x: x * 16,
+                    y: y * 16,
+                }})
+            )
+        }
+    })
+})
+
+const platformCollionBlocks = []
+platformCollisions2D.forEach((row, y) => {
+    row.forEach((symbol, x) => {
+        if(symbol === 202){
+            console.log('platform block')
+            platformCollionBlocks.push (
+                new CollisionBlock({
+                    position: {
+                        x: x * 16,
+                        y: y * 16,
+                    }
+                })
+            )
+        }
+    })
+})
+
+console.log(collisionBlocks)
+let gravity = 0.5
 
 const player = new Player({
     x: 0,
@@ -55,17 +76,39 @@ const keys = {
     }
 }
 
+const background = new Sprite({
+    position: {
+        x: 0,
+        y: 0,
+    },
+    imageSrc: './img/background.png',
+})
+
 function animate(){
     window.requestAnimationFrame(animate)
     c.fillStyle = 'white'
     c.fillRect(0, 0, canvas.width, canvas.height) 
-    // Render Player
+    
+    c.save()
+    c.scale(4, 4)
+    c.translate(0, -background.image.height + scaledCanvas.height)
+    background.update()
+    collisionBlocks.forEach((collisionBlock => {
+        collisionBlock.update()
+    }))
+    platformCollionBlocks.forEach((platformBlock => {
+        platformBlock.update()
+    }))
+    c.restore()
+
+   
+
     player.update()
     player2.update()
 
     player.velocity.x = 0
-    if (keys.d.pressed) player.velocity.x = 1
-    else if (keys.a.pressed) player.velocity.x = -1
+    if (keys.d.pressed) player.velocity.x = 5
+    else if (keys.a.pressed) player.velocity.x = -5
 }
 
 animate()
